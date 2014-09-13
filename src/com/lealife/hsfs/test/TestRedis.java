@@ -2,12 +2,13 @@ package com.lealife.hsfs.test;
 
 import java.util.Map;
 
+import com.lealife.hsfs.util.HsfsConfig;
 import com.lealife.hsfs.util.HsfsUtil;
 import redis.clients.jedis.Jedis;
 
 public class TestRedis {
 	public static void main(String args[]) {
-		Jedis jedis = new Jedis("192.168.22.198");
+		Jedis jedis = new Jedis(HsfsConfig.getRedisHost());
 //        
 //		jedis.set("foo", "life");
 //        jedis.hset("fileId", "hdfsPath", "/hsfs/xxx1");

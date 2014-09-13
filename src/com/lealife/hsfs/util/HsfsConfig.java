@@ -13,4 +13,7 @@ public class HsfsConfig {
     public static int getHdfsBlockNum() {
     	return 2;
     }
+    public static String getRedisHost() {
+    	return "localhost";
+    }
 }

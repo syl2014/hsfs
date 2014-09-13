@@ -7,6 +7,7 @@ import java.util.List;
 import redis.clients.jedis.Jedis;
 
 import com.lealife.hsfs.Hsfs;
+import com.lealife.hsfs.util.HsfsConfig;
 import com.lealife.hsfs.util.TestUtil;
 /**
  * 测试, 
@@ -19,7 +20,7 @@ import com.lealife.hsfs.util.TestUtil;
  */
 
 public class TestHsfs {
-	static Jedis jedis = new Jedis("192.168.22.198"); 
+	static Jedis jedis = new Jedis(HsfsConfig.getRedisHost()); 
     static String fileIdsTable = "fileIds";
     
 	static List<String> fileIds = new ArrayList<String>();
@@ -27,7 +28,8 @@ public class TestHsfs {
 	static Hsfs hsfs;
     static {
         hsfs = new Hsfs();
-//    	hsfs.init();
+        // 这会运行task
+    	hsfs.init();
     }
     
     public static void testPut() {
@@ -41,12 +43,13 @@ public class TestHsfs {
         
         // 10000 不用后台task 19.004
         // 使用 13.775; 10,0000:123.647
-		for(int i = 0; i < 10000; ++i) {
-			fileId = hsfs.put(filesPath.get(i%50));
+        int len = filesPath.size();
+		for(int i = 0; i < 100000; ++i) {
+			fileId = hsfs.put(filesPath.get(i%len));
 			// 把 fileIds加到redis中, 以后好分析下载用
             jedis.lpush("fileIds", fileId);
 			// fileIds.add(fileId);
-			System.out.println(i);
+			// System.out.println(i);
 		}
         
         Long end = Calendar.getInstance().getTimeInMillis();
@@ -86,8 +89,8 @@ public class TestHsfs {
     }
     
 	public static void main(String[] args) {
-//        testPut();
-        testGet();
+        testPut();
+//        testGet();
 //		getOne("8f995ab5-fdb6-4aa8-adb0-45889d581b9f");
    	}
 }

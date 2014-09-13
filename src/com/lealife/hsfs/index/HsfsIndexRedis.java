@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.lealife.hsfs.util.HsfsConfig;
+
 import redis.clients.jedis.Jedis;
 
 /**
@@ -16,7 +18,7 @@ import redis.clients.jedis.Jedis;
  *
  */
 public class HsfsIndexRedis implements HsfsIndexInterface {
-	static Jedis jedis = new Jedis("192.168.22.198"); 
+	static Jedis jedis = new Jedis(HsfsConfig.getRedisHost()); 
         
 	static String fileId2BlockTable = "fileId2Block";
 	static String blockIndexTable = "blockIndex";

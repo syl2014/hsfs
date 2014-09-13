@@ -16,6 +16,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.lealife.hsfs.info.FileId2Data;
+import com.lealife.hsfs.util.HsfsConfig;
 
 import redis.clients.jedis.Jedis;
 import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
@@ -47,9 +48,9 @@ import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
 public class HsfsCacheRedis implements HsfsCacheInterface {
 	static Logger logger = Logger.getLogger(HsfsCacheRedis.class);
     
-	static Jedis jedis = new Jedis("192.168.22.198"); 
+	static Jedis jedis = new Jedis(HsfsConfig.getRedisHost()); 
 	// 为读数据, 清理数据用
-	static Jedis jedisCopy = new Jedis("192.168.22.198"); 
+	static Jedis jedisCopy = new Jedis(HsfsConfig.getRedisHost()); 
 	
     /**
      * 合并空间表
