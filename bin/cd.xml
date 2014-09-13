@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+	<property>
+		<name>parseYesterdayData</name>
+		<value>false</value>
+		<description>是否是分析昨天的数据, false表示不判断HDFS是否有数据</description>
+	</property>
+
+	<!-- SidStats配置 -->
+	<property>
+		<name>sidsTable</name>  
+		<value>sid_flows</value>  
+	</property>
+	 <property>  
+		<name>sidStatsTable</name>  
+		<value>sid_flow_stats</value>  
+	</property>
+	<property>  
+		<name>sidStats.table</name>  
+		<value>sid_flow_stats</value>  
+	</property>
+	 <property>
+		<name>sidStats.outputPath</name>  
+		<value>/outputForAreaStat</value>  
+	</property>
+	
+	<property>  
+		<name>sidStats.dataFromAll</name>  
+		<value>false</value>
+		<description>从状态status为0的sid拿, 如果全拿, 那么代码全部重新统计</description>  
+	</property>
+	<property>  
+		<name>sidStats.hasRedcuer</name>  
+		<value>false</value>
+		<description>默认没有reducer</description>  
+	</property>
+	<property>  
+		<name>sidStats.redcuerNum</name>  
+		<value>3</value>
+		<description></description>  
+	</property>
+	
+	<!-- PartyStats -->
+	 <property>
+		<name>partyStats.table</name>  
+		<value>party_stats</value>  
+	</property>
+	<property>
+		<name>partyStats.reducerNum</name>  
+		<value>3</value>  
+	</property>
+	<property>
+		<name>partyStats.dataFromAll</name>  
+		<value>false</value> 
+		<description>默认是取没有分析过的数据</description>
+	</property>
+	
+	<!-- areaStats -->
+	 <property>  
+		<name>areaStats.country.table</name>  
+		<value>country_stats</value>  
+	</property>
+	 <property>  
+		<name>areaStats.region.table</name>  
+		<value>region_stats</value>  
+	</property>
+	 <property>  
+		<name>areaStats.city.table</name>  
+		<value>city_stats</value>  
+	</property>
+	 <property>  
+		<name>areaStats.town.table</name>  
+		<value>town_stats</value>  
+	</property>
+	 <property>  
+		<name>areaStats.outputPath</name>  
+		<value>/outputForExportDataToMysql</value>  
+	</property>
+	<property>
+		<name>areaStats.reducerNum</name>  
+		<value>3</value>  
+	</property>
+</configuration>

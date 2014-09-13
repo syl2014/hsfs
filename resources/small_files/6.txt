@@ -1,0 +1,115 @@
+create table bol_opr_logs (bol_opr_log_id  string, operate_type_id string, 
+operate_user_id string, operate_date string, 
+area_id  string, operate_time_zone_id  string, 
+bol_id   string, last_area_id string, next_area_id string, 
+bol_sid  string, operate_org_id  string, master_org_id   string, 
+origin_area_id  string, dest_area_id string, lading_item_weight      string, 
+upload_date  string)  partitioned by(dt string) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n' STORED AS TEXTFILE
+
+create table scan (sid string ,orgid string ,scandate string ,scantypeid  string ,areaid string)   partitioned by(dt string) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n' STORED AS TEXTFILE
+
+
+
+
+ALTER TABLE scan ADD PARTITION(dt='2013-11-03'); 
+LOAD DATA LOCAL INPATH '/bigdata/input/scan/2013-11-03' OVERWRITE INTO TABLE bol_opr_logs PARTITION(dt='2013-11-03');
+
+
+add file /home/hadoop/life/org_site;
+add file /home/hadoop/life/dk_cd.py;
+select orgid,date,type,sum(tag),count(*) from (select transform (sid,orgid,scandate,scantypeid,areaid) using 'python dk_cd.py 2013-09-09' as (orgid,date,type,tag) from (select * from scan where dt <='2013-09-09' and dt >= date_sub('2013-09-09',4) distribute by sid sort by sid,scandate)tmp) tmp2 group by orgid,date,type;
+
+hive -hiveconf hive.root.logger=DEBUG,console  
+
+select orgid,date,type,sum(tag),count(*) from (select transform (sid,orgid,scandate,scantypeid,areaid) using 'python dk_cd.py 2013-09-09' as (orgid,date,type,tag) from (select * from scan where dt <='2013-09-09' and dt >= date_sub('2013-09-09',4) distribute by sid sort by sid,scandate) tmp) tmp2 group by orgid,date,type;
+
+come='91a70eb4b12e49e99b08ce9d157cd297'
+sign='9891cdfe1aed428b97d318d19a6999bd'
+send='a4c2cdaeba6444739fda9d1778e74445'
+disp='8d5a8e9d942b482a8a4d94baa36abb47'
+
+# 新
+
+add file /bigdata/python/dr/org_site;
+add file /bigdata/python/dr/location_schedule;
+add file /bigdata/python/dr/dr.py;
+select orgid,date,type,sum(tag),count(*) from (select transform (sid,orgid,scandate,scantypeid,areaid) using 'python dr.py 2013-09-09' as (orgid,date,type,tag) from (select * from scan where dt <='2013-09-09' and dt >= date_sub('2013-09-09',4) distribute by sid sort by sid,scandate) tmp) tmp2 group by orgid,date,type;
+
+# bol_opr_logs
+select orgid, date, type, sum(tag), count(*) from (
+select transform (bol_sid, operate_org_id, operate_date, operate_type_id, area_id) using 'python dr.py 2013-10-31' as (orgid, date, type, tag) 
+from (select bol_sid, operate_org_id, operate_date, operate_type_id, area_id from bol_opr_logs where dt <='2013-11-03' and dt > date_sub('2013-11-03', 3) distribute by bol_sid sort by bol_sid, operate_date) tmp
+) tmp2 group by orgid, date, type;
+
+
+insert overwrite local directory '/bigdata/python/dr/sidsBig' select bol_sid, operate_org_id, operate_date, operate_type_id, area_id from bol_opr_logs where dt <='2013-11-03' and dt > date_sub('2013-11-03', 3) distribute by bol_sid sort by bol_sid, operate_date
+
+# 排序阶段
+insert overwrite local directory '/bigdata/python/dr/sidsBig' select sid,orgid,scandate,scantypeid,areaid from scan where dt <='2013-09-09' and dt >= date_sub('2013-09-09',1) distribute by sid sort by sid,scandate
+
+insert overwrite TABLE scan_sort select sid,orgid,scandate,scantypeid,areaid from scan where dt <='2013-09-09' and dt >= date_sub('2013-09-09',4) distribute by sid sort by sid,scandate
+
+insert overwrite local directory '/bigdata/python/dr/sidsBig2' select bol_sid, operate_org_id, operate_date, operate_type_id, area_id from bol_opr_logs where dt <='2013-10-31' and dt > date_sub('2013-10-31', 4) distribute by bol_sid sort by bol_sid, operate_date
+
+create table scan_sort(sid string, orgid string,scandate string,scantypeid string,areaid string) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n' STORED AS TEXTFILE;
+
+# 使用排序好后的表
+select orgid,date,type,sum(tag),count(*) from (select transform(sid,orgid,scandate,scantypeid,areaid) using 'python dr.py 2013-09-09' as (orgid,date,type,tag) from scan_sort) tmp group by orgid,date,type;
+
+select orgid,date,type,sum(tag),count(*) from (select transform (sid,orgid,scandate,scantypeid,areaid) using 'python dr.py 2013-09-09' as (orgid,date,type,tag) from (select * from scan where dt <='2013-09-09' and dt >= date_sub('2013-09-09',1) distribute by sid sort by sid,scandate) tmp) tmp2 group by orgid,date,type;
+
+
+select operate_org_id, operate_type_id, count(*) from (
+select transform (operate_org_id, operate_type_id) using 'python type_count.py 2013-10-31' as (operate_org_id, operate_type_id)
+from bol_opr_logs where dt='2013-10-31'
+) tmp group by operate_org_id, operate_type_id;
+
+
+
+# flow_eff
+
+# 创建临时表
+create table flow_eff_sorted_sids (
+bol_sid string, operate_org_id string, operate_date string, operate_type_id string, area_id string) 
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n' STORED AS TEXTFILE;
+
+# 排序, 插入临时表
+insert overwrite table flow_eff_sorted_sids 
+select bol_sid, operate_org_id, operate_date, operate_type_id, area_id 
+from bol_opr_logs where dt <='2013-11-03' and dt >= date_sub('2013-11-03', 7) distribute by bol_sid sort by bol_sid, operate_date;
+
+# 分析1 得到所有线路
+select transform (bol_sid, operate_org_id, operate_date, operate_type_id, area_id) using 'python flow_eff.py 1' as (lineId, lineName, startPartyId, endPartyId) 
+from flow_eff_sorted_sids;
+
+# 分析2 得到各sid, 起始与终点的时间差
+select lineId, startPartyId, endPartyId, interval, count(*) from 
+(select transform (bol_sid, operate_org_id, operate_date, operate_type_id, area_id) using 'python flow_eff.py 2' as (lineId, startPartyId, endPartyId, interval) 
+from flow_eff_sorted_sids) tmp group by lineId, startPartyId, endPartyId, interval;
+
+# 分析3 各个各段时间差
+select lineId, startPartyId, endPartyId, interval, count(*) from 
+(select transform (bol_sid, operate_org_id, operate_date, operate_type_id, area_id) using 'python flow_eff.py 3' as (lineId, startPartyId, endPartyId, interval) 
+from flow_eff_sorted_sids limit 100) tmp group by lineId, startPartyId, endPartyId, interval;
+
+# 删除临时表
+# drop table flow_eff_sorted_sid;
+
+F13C8C3360C74DCEC0C1737E72CF8CED
+
+# 分析4 得到主干网
+select transform (bol_sid, operate_org_id, operate_date, operate_type_id, area_id) using 'python flow_eff.py 4' as (lineId, lineName, startPartyId, endPartyId) 
+from flow_eff_sorted_sids;
+
+
+add file /bigdata/python/main.py;
+add file /bigdata/python/e.py;
+
+insert overwrite local directory '/bigdata/python/dr/sidsTest'
+select transform (bol_sid)
+using 'python main.py' as (bol_sid)
+from flow_eff_sorted_sids
+;
+
+
+insert overwrite local directory '/bigdata/python/dr/sidsTest2' select bol_sid, operate_org_id, operate_date, operate_type_id, area_id, master_org_id from bol_opr_logs where dt <='2013-08-26' and dt > date_sub('2013-08-26', 4) distribute by bol_sid sort by bol_sid, operate_date

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+	<!-- SidStats配置 -->
+	<property>  
+		<name>sidStats.dataFromAll</name>  
+		<value>false</value>
+		<description>从状态status为0的sid拿, 如果全拿, 那么代码全部重新统计</description>  
+	</property>
+	
+	<!-- PartyStats -->
+	<property>
+		<name>partyStats.dataFromAll</name>  
+		<value>true</value> 
+		<description>默认是取没有分析过的数据</description>
+	</property>
+</configuration>
